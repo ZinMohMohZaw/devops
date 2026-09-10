@@ -9,7 +9,7 @@ import org.bson.Document;
 public class App {
     public static void main(String[] args) {
         // Connect to MongoDB on local system using try-with-resources to ensure proper cleanup
-        try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27000")) {
+        try (MongoClient mongoClient = MongoClients.create("mongodb://mongo-dbserver:27017")) {
 
             // Get database & collection
             MongoDatabase database = mongoClient.getDatabase("mydb");
