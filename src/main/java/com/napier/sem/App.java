@@ -1,35 +1,48 @@
 package com.napier.sem;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoCollection;
-import org.bson.Document;
+import java.sql.*;
 
 public class App {
     public static void main(String[] args) {
-        // Connect to MongoDB on local system using try-with-resources to ensure proper cleanup
-        try (MongoClient mongoClient = MongoClients.create("mongodb://mongo-dbserver:27017")) {
+        try {
+            // Load MySQL Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Could not load SQL driver");
+            System.exit(-1);
+        }
 
-            // Get database & collection
-            MongoDatabase database = mongoClient.getDatabase("mydb");
-            MongoCollection<Document> collection = database.getCollection("test");
+        Connection con = null;
+        int retries = 100;
+        for (int i = 0; i < retries; ++i) {
+            System.out.println("Connecting to database...");
+            try {
+                // Wait a bit for database container to initialize
+                Thread.sleep(30000);
 
-            // Create document
-            Document doc = new Document("name", "Kevin Sim")
-                    .append("class", "DevOps")
-                    .append("year", "2024")
-                    .append("result", new Document("CW", 95).append("EX", 85));
+                // Connect using the Docker Compose service name 'db'
+                con = DriverManager.getConnection(
+                        "jdbc:mysql://db:3306/employees?allowPublicKeyRetrieval=true&useSSL=false",
+                        "root",
+                        "example"
+                );
 
-            // Insert document
-            collection.insertOne(doc);
+                System.out.println("Successfully connected");
+                Thread.sleep(10000);
+                break;
+            } catch (SQLException sqle) {
+                System.out.println("Failed to connect to database attempt " + i);
+                System.out.println(sqle.getMessage());
+            } catch (InterruptedException ie) {
+                System.out.println("Thread interrupted.");
+            }
+        }
 
-            // Find and print the document safely
-            Document myDoc = collection.find().first();
-            if (myDoc != null) {
-                System.out.println(myDoc.toJson());
-            } else {
-                System.out.println("No document found in collection.");
+        if (con != null) {
+            try {
+                con.close();
+            } catch (Exception e) {
+                System.out.println("Error closing connection to database");
             }
         }
     }

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  # Application service built from root Dockerfile
+  app:
+    build: .
+
+  # MySQL Database service built from db/Dockerfile
+  db:
+    build: db/.
+    restart: always
+    ports:
+      - "33060:3306"
