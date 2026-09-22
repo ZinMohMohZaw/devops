@@ -1,7 +1,9 @@
 package com.napier.sem;
 
 import java.sql.*;
+import java.util.ArrayList;
 
+@SuppressWarnings({"unused", "RedundantModifiers"})
 public class App {
     /**
      * Connection to MySQL database.
@@ -63,10 +65,7 @@ public class App {
      */
     public Employee getEmployee(int ID) {
         try {
-            // Create an SQL statement
-            Statement stmt = con.createStatement();
-
-            // SQL query joining tables using '9999-01-01' for current active records
+            // Using PreparedStatement to avoid unsafe SQL string concatenation
             String strSelect =
                     "SELECT emp.emp_no, emp.first_name, emp.last_name, " +
                             "       t.title, s.salary, d.dept_name, " +
@@ -78,10 +77,12 @@ public class App {
                             "JOIN departments d ON de.dept_no = d.dept_no " +
                             "LEFT JOIN dept_manager dm ON de.dept_no = dm.dept_no AND dm.to_date = '9999-01-01' " +
                             "LEFT JOIN employees m ON dm.emp_no = m.emp_no " +
-                            "WHERE emp.emp_no = " + ID;
+                            "WHERE emp.emp_no = ?";
 
-            // Execute SQL statement
-            ResultSet rset = stmt.executeQuery(strSelect);
+            PreparedStatement stmt = con.prepareStatement(strSelect);
+            stmt.setInt(1, ID);
+
+            ResultSet rset = stmt.executeQuery();
 
             if (rset.next()) {
                 Employee emp = new Employee();
@@ -122,18 +123,80 @@ public class App {
         }
     }
 
-    public static void main(String[] args) {
-        // Create new Application
+    /**
+     * Gets all current salaries of employees for a given role (title).
+     *
+     * @param title The role/title to filter by (e.g., "Engineer")
+     * @return A list of Employee objects containing salary details.
+     */
+    public ArrayList<Employee> getSalariesByRole(String title) {
+        try {
+            // Using PreparedStatement and removing redundant ASC ordering
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
+                            "FROM employees, salaries, titles " +
+                            "WHERE employees.emp_no = salaries.emp_no " +
+                            "AND employees.emp_no = titles.emp_no " +
+                            "AND salaries.to_date = '9999-01-01' " +
+                            "AND titles.to_date = '9999-01-01' " +
+                            "AND titles.title = ? " +
+                            "ORDER BY employees.emp_no";
+
+            PreparedStatement stmt = con.prepareStatement(strSelect);
+            stmt.setString(1, title);
+
+            ResultSet rset = stmt.executeQuery();
+
+            ArrayList<Employee> employees = new ArrayList<>();
+            while (rset.next()) {
+                Employee emp = new Employee();
+                emp.emp_no = rset.getInt("employees.emp_no");
+                emp.first_name = rset.getString("employees.first_name");
+                emp.last_name = rset.getString("employees.last_name");
+                emp.salary = rset.getInt("salaries.salary");
+                employees.add(emp);
+            }
+            return employees;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get salary details by role");
+            return null;
+        }
+    }
+
+    /**
+     * Prints a list of employees and their salaries formatted into columns.
+     *
+     * @param employees The list of employees to print.
+     */
+    public void printSalaries(ArrayList<Employee> employees) {
+        if (employees == null) {
+            System.out.println("No employees found.");
+            return;
+        }
+
+        // Print header
+        System.out.printf("%-10s %-15s %-20s %-10s%n", "Emp No", "First Name", "Last Name", "Salary");
+
+        // Loop over all employees
+        for (Employee emp : employees) {
+            if (emp == null) continue;
+            System.out.printf("%-10s %-15s %-20s %-10s%n",
+                    emp.emp_no, emp.first_name, emp.last_name, emp.salary);
+        }
+    }
+
+    static void main(String[] args) {
         App a = new App();
 
         // Connect to database
         a.connect();
 
-        // Get Employee by ID
-        Employee emp = a.getEmployee(255530);
+        // Retrieve current salaries for role "Engineer"
+        ArrayList<Employee> employees = a.getSalariesByRole("Engineer");
 
         // Display results
-        a.displayEmployee(emp);
+        a.printSalaries(employees);
 
         // Disconnect from database
         a.disconnect();
