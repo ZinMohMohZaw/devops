@@ -1,0 +1,58 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor HR as "HR Advisor"
+actor DM as "Department Manager"
+
+rectangle Database
+
+rectangle "HR System" {
+    ' Reporting Use Cases
+    usecase UC1 as "Produce Salary Report
+    (All Employees)"
+    usecase UC2 as "Produce Salary Report
+    (By Department - HR)"
+    usecase UC3 as "Produce Salary Report
+    (My Department - Manager)"
+    usecase UC4 as "Produce Salary Report
+    (By Role)"
+
+    ' Employee Management Use Cases
+    usecase UC5 as "Add New Employee"
+    usecase UC6 as "View Employee Details"
+    usecase UC7 as "Update Employee Details"
+    usecase UC8 as "Delete Employee Details"
+
+    ' Included Shared Use Case
+    usecase UCa as "Print Report / Export"
+
+    ' HR Advisor Interactions
+    HR -- UC1
+    HR -- UC2
+    HR -- UC4
+    HR -- UC5
+    HR -- UC6
+    HR -- UC7
+    HR -- UC8
+
+    ' Department Manager Interactions
+    DM -- UC3
+
+    ' Include Relationships
+    UC1 ..> UCa : include
+    UC2 ..> UCa : include
+    UC3 ..> UCa : include
+    UC4 ..> UCa : include
+
+    ' Database Connections
+    UC1 -- Database
+    UC2 -- Database
+    UC3 -- Database
+    UC4 -- Database
+    UC5 -- Database
+    UC6 -- Database
+    UC7 -- Database
+    UC8 -- Database
+}
+@enduml
