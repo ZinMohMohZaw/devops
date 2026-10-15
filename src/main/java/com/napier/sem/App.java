@@ -75,16 +75,25 @@ public class App {
 
     /**
      * Prints a list of employees.
-     *
      * @param employees The list of employees to print.
      */
     public void printSalaries(ArrayList<Employee> employees) {
-        if (employees == null || employees.isEmpty()) {
+        // Check employees list is not null
+        if (employees == null) {
             System.out.println("No employees");
             return;
         }
+
+        // Print header
         System.out.printf("%-10s %-15s %-20s %-8s%n", "Emp No", "First Name", "Last Name", "Salary");
+
+        // Loop over all employees in the list
         for (Employee emp : employees) {
+            // Check individual employee element is not null
+            if (emp == null) {
+                continue;
+            }
+
             String emp_string =
                     String.format("%-10s %-15s %-20s %-8s",
                             emp.emp_no, emp.first_name, emp.last_name, emp.salary);
@@ -272,6 +281,25 @@ public class App {
             System.out.println("Failed to get employee by name");
             return null;
         }
+    }
+    /**
+     * Displays a single employee's details safely.
+     * @param emp The employee object to display.
+     */
+    public void displayEmployee(Employee emp) {
+        if (emp == null) {
+            System.out.println("No employee details to display.");
+            return;
+        }
+        System.out.println(
+                emp.emp_no + " "
+                        + emp.first_name + " "
+                        + emp.last_name + "\n"
+                        + (emp.title != null ? emp.title : "No Title") + "\n"
+                        + "Salary: " + emp.salary + "\n"
+                        + (emp.dept != null ? emp.dept.dept_name : "No Department") + "\n"
+                        + "Manager: " + (emp.manager != null ? emp.manager.first_name + " " + emp.manager.last_name : "None") + "\n"
+        );
     }
 }
 
