@@ -7,27 +7,47 @@ public class App {
 
     private Connection con = null;
 
+
     public void connect() {
+        connect("db:3306", 30000);
+    }
+
+    public void connect(String location, int delay) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load SQL driver");
-            System.exit(-1);
+            return;
         }
 
         int retries = 10;
-        for (int i = 0; i < retries; ++i) {
+
+        for (int i = 0; i < retries; i++) {
             System.out.println("Connecting to database...");
+
             try {
-                Thread.sleep(30000);
-                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?useSSL=false&allowPublicKeyRetrieval=true", "root", "example");
+                con = DriverManager.getConnection(
+                        "jdbc:mysql://" + location
+                                + "/employees?allowPublicKeyRetrieval=true&useSSL=false",
+                        "root",
+                        "example"
+                );
+
                 System.out.println("Successfully connected");
-                break;
-            } catch (SQLException sqle) {
-                System.out.println("Failed to connect to database attempt " + i);
-                System.out.println(sqle.getMessage());
-            } catch (InterruptedException ie) {
-                System.out.println("Thread interrupted? Should not happen.");
+                return;
+
+            } catch (SQLException e) {
+                System.out.println("Failed to connect to database attempt " + (i + 1));
+                System.out.println(e.getMessage());
+
+                if (i < retries - 1) {
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
             }
         }
     }
@@ -183,21 +203,42 @@ public class App {
         }
     }
 
+    /**
+     * Adds a new employee to the database.
+     * @param emp The Employee object containing details to insert.
+     */
+    public void addEmployee(Employee emp) {
+        if (emp == null) return;
+        try {
+            Statement stmt = con.createStatement();
+            String strUpdate =
+                    "INSERT INTO employees (emp_no, first_name, last_name, birth_date, gender, hire_date) " +
+                            "VALUES (" + emp.emp_no + ", '" + emp.first_name + "', '" + emp.last_name + "', " +
+                            "'1990-01-01', 'M', '2020-01-01')";
+            stmt.executeUpdate(strUpdate);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to add employee");
+        }
+    }
     public static void main(String[] args) {
+        // Create new Application and connect to database
         App a = new App();
-        a.connect();
 
-        // Get and test department salaries
-        Department dept = a.getDepartment("Sales");
-        if (dept != null) {
-            System.out.println("Department: " + dept.dept_name + " (" + dept.dept_no + ")");
-            if (dept.manager != null) {
-                System.out.println("Manager: " + dept.manager.first_name + " " + dept.manager.last_name);
-            }
-            ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
-            a.printSalaries(employees);
+        if(args.length < 1){
+            a.connect("localhost:33060", 30000);
+        }else{
+            a.connect(args[0], Integer.parseInt(args[1]));
         }
 
+        Department dept = a.getDepartment("Development");
+        ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
+
+
+        // Print salary report
+        a.printSalaries(employees);
+
+        // Disconnect from database
         a.disconnect();
     }
 
