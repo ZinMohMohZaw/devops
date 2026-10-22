@@ -11,3 +11,4 @@ Update Testing workflow working or not
 # DevOps
 ![Develop Branch](https://img.shields.io/github/actions/workflow/status/zinmohmohzaw/devops/main.yml?branch=develop&style=flat-square&label=build%20(develop)) <br>
 ![Master Branch](https://img.shields.io/github/actions/workflow/status/zinmohmohzaw/devops/main.yml?branch=master&style=flat-square&label=build%20(master))
+[![codecov](https://codecov.io/gh/zinmohmohzaw/devops/branch/develop/graph/badge.svg?token=961HHJOB0L)](https://codecov.io/gh/zinmohmohzaw/devops)
